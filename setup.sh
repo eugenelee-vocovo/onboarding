@@ -51,7 +51,6 @@ echo "🔧 Setting up Node.js Environment..."
 export NVM_DIR="$HOME/.nvm"
 mkdir -p "$NVM_DIR"
 
-
 [ -s "$(brew --prefix)/opt/nvm/nvm.sh" ] && \. "$(brew --prefix)/opt/nvm/nvm.sh"
 
 if command -v nvm &> /dev/null; then
@@ -77,14 +76,23 @@ cat << 'EOF' >> ~/.zshrc
 export PATH="$PATH:/Applications/Visual Studio Code.app/Contents/Resources/app/bin"
 
 # --- NVM (Lazy Loading) ---
-export NVM_DIR="$HOME/.nvm"
-nvm() {
-  unset -f nvm
-  [ -s "$(brew --prefix)/opt/nvm/nvm.sh" ] && \. "$(brew --prefix)/opt/nvm/nvm.sh"
-  nvm "$@"
+load_nvm() {
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && \. "/opt/homebrew/opt/nvm/nvm.sh"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 }
-node() { unset -f node nvm; nvm use default; node "$@"; }
-npm() { unset -f npm nvm; nvm use default; npm "$@"; }
+nvm()  { unset -f nvm;  load_nvm; nvm "$@"; }
+node() { unset -f node; load_nvm; node "$@"; }
+npm()  { unset -f npm;  load_nvm; npm "$@"; }
+npx()  { unset -f npx;  load_nvm; npx "$@"; }
+
+# --- Modern CLI Aliases ---
+alias ls="eza --icons --group-directories-first"
+alias ll="eza -lah --icons --group-directories-first"
+alias lt="eza --tree --level=2 --icons"
+alias cat="bat"
+alias cd="z"
+alias grep="rg"
 
 # --- Core Tool Initializations ---
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
@@ -99,7 +107,6 @@ EOF
 else
     echo "⏭️ .zshrc configuration already exists. Skipping..."
 fi
-
 
 # 5. Final Configurations (Git & GitHub)
 echo "🔧 Finalizing Git & GitHub configuration..."
@@ -129,11 +136,15 @@ if command -v gh &>/dev/null; then
     fi
 fi
 
+# TODO: GPG key configuration
 
 # 6. Success Message
 echo "--------------------------------------------------"
 echo "✅ Setup Complete!"
 echo "🚀 Applying changes... Please wait."
 echo "--------------------------------------------------"
+
+# tldr init update
+tldr --update &>/dev/null &
 
 exec zsh -l
